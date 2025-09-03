@@ -12,6 +12,8 @@ import java.security.Key;
 import java.util.Date;
 import java.util.Map;
 import java.util.function.Function;
+import java.nio.charset.StandardCharsets;
+import java.util.regex.Pattern;
 
 @Service
 public class JwtService {
@@ -68,7 +70,7 @@ public class JwtService {
     }
 
     private Key getSignInKey() {
-        byte[] keyBytes = decodeSecret(jwtSecret);
+        byte[] keyBytes = decodeSecretSafely(jwtSecret);
         if (keyBytes.length < 32) {
             // Ensure minimum length for HS256 (256 bits). Pad deterministically.
             byte[] padded = new byte[32];
@@ -80,16 +82,22 @@ public class JwtService {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
-    private byte[] decodeSecret(String secret) {
-        try {
-            return Decoders.BASE64.decode(secret);
-        } catch (RuntimeException ex1) {
-            try {
-                return Decoders.BASE64URL.decode(secret);
-            } catch (RuntimeException ex2) {
-                return secret.getBytes();
-            }
+    private static final Pattern BASE64_PATTERN = Pattern.compile("^[A-Za-z0-9+/=\\s]+$");
+    private static final Pattern BASE64URL_PATTERN = Pattern.compile("^[A-Za-z0-9_-]+={0,2}$");
+
+    private byte[] decodeSecretSafely(String secret) {
+        if (secret == null) {
+            return new byte[0];
         }
+        String trimmed = secret.trim();
+        // Heuristic: choose decoder based on allowed character sets to avoid throwing
+        if (BASE64_PATTERN.matcher(trimmed).matches()) {
+            try { return Decoders.BASE64.decode(trimmed); } catch (RuntimeException ignore) {}
+        }
+        if (BASE64URL_PATTERN.matcher(trimmed).matches()) {
+            try { return Decoders.BASE64URL.decode(trimmed); } catch (RuntimeException ignore) {}
+        }
+        return trimmed.getBytes(StandardCharsets.UTF_8);
     }
 }
 
