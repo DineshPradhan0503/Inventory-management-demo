@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import api from '../../utils/api'
-import { AppBar, Toolbar, Typography, Box, Button, TextField, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Stack, Alert, IconButton } from '@mui/material'
-import { Link } from 'react-router-dom'
+import { Box, Button, TextField, Paper, Stack, Alert, IconButton, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material'
+import AppLayout from '../../layout/AppLayout'
+import { DataGrid, type GridColDef } from '@mui/x-data-grid'
 import AddIcon from '@mui/icons-material/Add'
 import DeleteIcon from '@mui/icons-material/Delete'
 import EditIcon from '@mui/icons-material/Edit'
@@ -39,8 +40,8 @@ const ProductsPage = () => {
 
   useEffect(() => { fetchProducts() }, [])
 
-  const [sortKey, setSortKey] = useState<'name'|'price'|'stock'>('name')
-  const [sortDir, setSortDir] = useState<'asc'|'desc'>('asc')
+  const [sortKey] = useState<'name'|'price'|'stock'>('name')
+  const [sortDir] = useState<'asc'|'desc'>('asc')
   const filtered = useMemo(() => {
     const q = search.toLowerCase()
     return products
@@ -54,17 +55,27 @@ const ProductsPage = () => {
       })
   }, [products, search, sortKey, sortDir])
 
+  const [confirm, setConfirm] = useState<{ id: string; name: string } | null>(null)
+
+  const columns: GridColDef[] = [
+    { field: 'name', headerName: 'Name', flex: 1 },
+    { field: 'category', headerName: 'Category', flex: 1 },
+    { field: 'description', headerName: 'Description', flex: 1.5 },
+    { field: 'price', headerName: 'Price', type: 'number', width: 120 },
+    { field: 'stockQuantity', headerName: 'Stock', type: 'number', width: 120,
+      cellClassName: params => (params.row.lowStock ? 'low-stock' : '') as any },
+    { field: 'actions', headerName: 'Actions', sortable: false, width: 200, renderCell: (params) => (
+      <Stack direction="row" spacing={1}>
+        <IconButton size="small" color="primary" onClick={() => { setEditing(params.row); setOpen(true) }}><EditIcon /></IconButton>
+        <IconButton size="small" color="success" onClick={async () => { await api.post(`/products/${params.row.id}/increase`, null, { params: { qty: 1 } }); fetchProducts() }}><ArrowUpwardIcon /></IconButton>
+        <IconButton size="small" color="warning" onClick={async () => { await api.post(`/products/${params.row.id}/decrease`, null, { params: { qty: 1 } }); fetchProducts() }}><ArrowDownwardIcon /></IconButton>
+        <IconButton size="small" color="error" onClick={() => setConfirm({ id: params.row.id, name: params.row.name })}><DeleteIcon /></IconButton>
+      </Stack>
+    )},
+  ]
+
   return (
-    <Box>
-      <AppBar position="static">
-        <Toolbar>
-          <Typography variant="h6" sx={{ flexGrow: 1 }}>Products</Typography>
-          <Button color="inherit" component={Link} to="/">Dashboard</Button>
-          <Button color="inherit" component={Link} to="/sales">Sales</Button>
-          <Button color="inherit" component={Link} to="/reports">Reports</Button>
-        </Toolbar>
-      </AppBar>
-      <Box sx={{ p: 3 }}>
+    <AppLayout>
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mb: 2 }}>
           <TextField label="Search" value={search} onChange={(e) => setSearch(e.target.value)} />
           <Button variant="contained" onClick={fetchProducts}>Search</Button>
@@ -72,39 +83,9 @@ const ProductsPage = () => {
           <Button startIcon={<AddIcon />} variant="contained" onClick={() => { setEditing(null); setOpen(true) }}>Add Product</Button>
         </Stack>
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-        <TableContainer component={Paper}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell onClick={() => { setSortKey('name'); setSortDir(sortDir === 'asc' ? 'desc' : 'asc') }} sx={{ cursor: 'pointer' }}>Name</TableCell>
-                <TableCell>Category</TableCell>
-                <TableCell>Description</TableCell>
-                <TableCell align="right" onClick={() => { setSortKey('price'); setSortDir(sortDir === 'asc' ? 'desc' : 'asc') }} sx={{ cursor: 'pointer' }}>Price</TableCell>
-                <TableCell align="right" onClick={() => { setSortKey('stock'); setSortDir(sortDir === 'asc' ? 'desc' : 'asc') }} sx={{ cursor: 'pointer' }}>Stock</TableCell>
-                <TableCell align="right">Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {filtered.map((p) => (
-                <TableRow key={p.id} hover selected={p.lowStock}>
-                  <TableCell>{p.name}</TableCell>
-                  <TableCell>{p.category}</TableCell>
-                  <TableCell>{p.description}</TableCell>
-                  <TableCell align="right">{p.price}</TableCell>
-                  <TableCell align="right" style={{ color: p.lowStock ? 'red' : undefined }}>{p.stockQuantity}</TableCell>
-                  <TableCell align="right">
-                    <Stack direction="row" spacing={1} justifyContent="flex-end">
-                      <IconButton size="small" color="primary" onClick={() => { setEditing(p); setOpen(true) }}><EditIcon /></IconButton>
-                      <IconButton size="small" color="success" onClick={async () => { await api.post(`/products/${p.id}/increase`, null, { params: { qty: 1 } }); fetchProducts() }}><ArrowUpwardIcon /></IconButton>
-                      <IconButton size="small" color="warning" onClick={async () => { await api.post(`/products/${p.id}/decrease`, null, { params: { qty: 1 } }); fetchProducts() }}><ArrowDownwardIcon /></IconButton>
-                      <IconButton size="small" color="error" onClick={async () => { await api.delete(`/products/${p.id}`); fetchProducts() }}><DeleteIcon /></IconButton>
-                    </Stack>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+        <Paper sx={{ height: 560, width: '100%' }}>
+          <DataGrid rows={filtered} columns={columns} getRowId={(r) => r.id} disableRowSelectionOnClick pageSizeOptions={[10,25,50]} initialState={{ pagination: { paginationModel: { pageSize: 10 } } }} />
+        </Paper>
         <ProductDialog
           open={open}
           initial={editing || undefined}
@@ -119,8 +100,15 @@ const ProductsPage = () => {
             fetchProducts()
           }}
         />
-      </Box>
-    </Box>
+        <Dialog open={!!confirm} onClose={() => setConfirm(null)}>
+          <DialogTitle>Delete product</DialogTitle>
+          <DialogContent>Are you sure you want to delete "{confirm?.name}"?</DialogContent>
+          <DialogActions>
+            <Button onClick={() => setConfirm(null)}>Cancel</Button>
+            <Button color="error" variant="contained" onClick={async () => { if (confirm) { await api.delete(`/products/${confirm.id}`); setConfirm(null); fetchProducts() } }}>Delete</Button>
+          </DialogActions>
+        </Dialog>
+    </AppLayout>
   )
 }
 

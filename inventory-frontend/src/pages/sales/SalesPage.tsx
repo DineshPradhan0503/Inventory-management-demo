@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import api from '../../utils/api'
-import { AppBar, Toolbar, Typography, Box, Button, Paper, Stack, TextField, Alert, TableContainer, Table, TableHead, TableRow, TableCell, TableBody } from '@mui/material'
-import { Link } from 'react-router-dom'
+import { Button, Paper, Stack, TextField, Alert, TableContainer, Table, TableHead, TableRow, TableCell, TableBody } from '@mui/material'
+import AppLayout from '../../layout/AppLayout'
 
 type Product = { id: string; name: string }
 type Sale = { id: string; productId: string; quantity: number; saleTime: string; soldByUserId: string }
@@ -37,16 +37,7 @@ const SalesPage = () => {
   useEffect(() => { load() }, [])
 
   return (
-    <Box>
-      <AppBar position="static">
-        <Toolbar>
-          <Typography variant="h6" sx={{ flexGrow: 1 }}>Sales</Typography>
-          <Button color="inherit" component={Link} to="/">Dashboard</Button>
-          <Button color="inherit" component={Link} to="/products">Products</Button>
-          <Button color="inherit" component={Link} to="/reports">Reports</Button>
-        </Toolbar>
-      </AppBar>
-      <Box sx={{ p: 3 }}>
+    <AppLayout>
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
         <Paper sx={{ p: 2, mb: 3 }}>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
@@ -81,8 +72,7 @@ const SalesPage = () => {
             </TableBody>
           </Table>
         </TableContainer>
-      </Box>
-    </Box>
+    </AppLayout>
   )
 }
 

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import api from '../../utils/api'
-import { AppBar, Toolbar, Typography, Box, Button, Paper, Stack } from '@mui/material'
-import { Link } from 'react-router-dom'
+import { Typography, Box, Button, Paper, Stack } from '@mui/material'
+import AppLayout from '../../layout/AppLayout'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
 
 const ReportsPage = () => {
@@ -23,16 +23,7 @@ const ReportsPage = () => {
   const productTotalsData = sales ? Object.entries(sales.productTotals || {}).map(([k, v]) => ({ name: k, value: v as number })) : []
 
   return (
-    <Box>
-      <AppBar position="static">
-        <Toolbar>
-          <Typography variant="h6" sx={{ flexGrow: 1 }}>Reports</Typography>
-          <Button color="inherit" component={Link} to="/">Dashboard</Button>
-          <Button color="inherit" component={Link} to="/products">Products</Button>
-          <Button color="inherit" component={Link} to="/sales">Sales</Button>
-        </Toolbar>
-      </AppBar>
-      <Box sx={{ p: 3 }}>
+    <AppLayout>
         <Stack direction="row" spacing={2} sx={{ mb: 2 }}>
           <Button variant="outlined" onClick={() => {
             const rows = (stock?.lowStock || []).map((p: any) => ({ name: p.name, stock: p.stockQuantity, threshold: p.threshold }))
@@ -74,8 +65,7 @@ const ReportsPage = () => {
             </ResponsiveContainer>
           </Paper>
         </Box>
-      </Box>
-    </Box>
+    </AppLayout>
   )
 }
 
