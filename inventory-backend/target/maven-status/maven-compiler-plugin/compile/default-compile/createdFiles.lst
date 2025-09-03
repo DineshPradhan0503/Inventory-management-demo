@@ -37,3 +37,4 @@ com/example/inventory/controller/SaleController.class
 com/example/inventory/dto/ProductDtos$CreateOrUpdateProductRequest.class
 com/example/inventory/dto/AuthDtos$LoginRequest.class
 com/example/inventory/model/Product.class
+com/example/inventory/config/CorsConfig.class

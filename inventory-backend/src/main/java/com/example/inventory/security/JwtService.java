@@ -68,20 +68,28 @@ public class JwtService {
     }
 
     private Key getSignInKey() {
-        byte[] keyBytes;
-        try {
-            // Try Base64 first
-            keyBytes = Decoders.BASE64.decode(jwtSecret);
-        } catch (RuntimeException ex1) {
-            try {
-                // Try Base64Url as fallback
-                keyBytes = Decoders.BASE64URL.decode(jwtSecret);
-            } catch (RuntimeException ex2) {
-                // Use raw bytes as final fallback (supports plain secrets)
-                keyBytes = jwtSecret.getBytes();
+        byte[] keyBytes = decodeSecret(jwtSecret);
+        if (keyBytes.length < 32) {
+            // Ensure minimum length for HS256 (256 bits). Pad deterministically.
+            byte[] padded = new byte[32];
+            for (int i = 0; i < 32; i++) {
+                padded[i] = keyBytes[i % keyBytes.length];
             }
+            keyBytes = padded;
         }
         return Keys.hmacShaKeyFor(keyBytes);
+    }
+
+    private byte[] decodeSecret(String secret) {
+        try {
+            return Decoders.BASE64.decode(secret);
+        } catch (RuntimeException ex1) {
+            try {
+                return Decoders.BASE64URL.decode(secret);
+            } catch (RuntimeException ex2) {
+                return secret.getBytes();
+            }
+        }
     }
 }
 
