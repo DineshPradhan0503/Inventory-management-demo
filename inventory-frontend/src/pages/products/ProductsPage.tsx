@@ -39,7 +39,20 @@ const ProductsPage = () => {
 
   useEffect(() => { fetchProducts() }, [])
 
-  const filtered = useMemo(() => products, [products])
+  const [sortKey, setSortKey] = useState<'name'|'price'|'stock'>('name')
+  const [sortDir, setSortDir] = useState<'asc'|'desc'>('asc')
+  const filtered = useMemo(() => {
+    const q = search.toLowerCase()
+    return products
+      .filter(p => !q || p.name.toLowerCase().includes(q) || (p.description||'').toLowerCase().includes(q) || (p.category||'').toLowerCase().includes(q))
+      .sort((a,b) => {
+        const mul = sortDir === 'asc' ? 1 : -1
+        if (sortKey === 'name') return a.name.localeCompare(b.name) * mul
+        if (sortKey === 'price') return ((a.price||0) - (b.price||0)) * mul
+        if (sortKey === 'stock') return (a.stockQuantity - b.stockQuantity) * mul
+        return 0
+      })
+  }, [products, search, sortKey, sortDir])
 
   return (
     <Box>
@@ -63,11 +76,11 @@ const ProductsPage = () => {
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell>Name</TableCell>
+                <TableCell onClick={() => { setSortKey('name'); setSortDir(sortDir === 'asc' ? 'desc' : 'asc') }} sx={{ cursor: 'pointer' }}>Name</TableCell>
                 <TableCell>Category</TableCell>
                 <TableCell>Description</TableCell>
-                <TableCell align="right">Price</TableCell>
-                <TableCell align="right">Stock</TableCell>
+                <TableCell align="right" onClick={() => { setSortKey('price'); setSortDir(sortDir === 'asc' ? 'desc' : 'asc') }} sx={{ cursor: 'pointer' }}>Price</TableCell>
+                <TableCell align="right" onClick={() => { setSortKey('stock'); setSortDir(sortDir === 'asc' ? 'desc' : 'asc') }} sx={{ cursor: 'pointer' }}>Stock</TableCell>
                 <TableCell align="right">Actions</TableCell>
               </TableRow>
             </TableHead>

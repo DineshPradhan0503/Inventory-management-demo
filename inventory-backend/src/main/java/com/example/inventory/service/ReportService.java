@@ -14,6 +14,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import java.io.ByteArrayOutputStream;
+import com.lowagie.text.Document;
+import com.lowagie.text.Paragraph;
+import com.lowagie.text.pdf.PdfWriter;
+
 @Service
 public class ReportService {
     private final ProductRepository productRepository;
@@ -68,6 +77,93 @@ public class ReportService {
         result.put("bestProductId", bestProductId);
         result.put("productTotals", productTotals);
         return result;
+    }
+
+    public byte[] stockReportExcel() {
+        List<Product> products = productRepository.findAll();
+        try (XSSFWorkbook wb = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            Sheet sheet = wb.createSheet("Stock");
+            int r = 0;
+            Row header = sheet.createRow(r++);
+            header.createCell(0).setCellValue("Name");
+            header.createCell(1).setCellValue("Category");
+            header.createCell(2).setCellValue("Price");
+            header.createCell(3).setCellValue("Stock");
+            header.createCell(4).setCellValue("Threshold");
+            for (Product p : products) {
+                Row row = sheet.createRow(r++);
+                row.createCell(0).setCellValue(p.getName());
+                row.createCell(1).setCellValue(p.getCategory());
+                Cell priceCell = row.createCell(2);
+                priceCell.setCellValue(p.getPrice() != null ? p.getPrice().doubleValue() : 0);
+                row.createCell(3).setCellValue(p.getStockQuantity());
+                row.createCell(4).setCellValue(p.getThreshold());
+            }
+            wb.write(out);
+            return out.toByteArray();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to create Excel", e);
+        }
+    }
+
+    public byte[] salesSummaryExcel(String period) {
+        Map<String, Object> summary = salesSummary(period);
+        Map<String, Long> totals = (Map<String, Long>) summary.getOrDefault("productTotals", Map.of());
+        try (XSSFWorkbook wb = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            Sheet sheet = wb.createSheet("Sales");
+            int r = 0;
+            Row header = sheet.createRow(r++);
+            header.createCell(0).setCellValue("ProductId");
+            header.createCell(1).setCellValue("UnitsSold");
+            for (Map.Entry<String, Long> entry : totals.entrySet()) {
+                Row row = sheet.createRow(r++);
+                row.createCell(0).setCellValue(entry.getKey());
+                row.createCell(1).setCellValue(entry.getValue());
+            }
+            wb.write(out);
+            return out.toByteArray();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to create Excel", e);
+        }
+    }
+
+    public byte[] stockReportPdf() {
+        List<Product> products = productRepository.findAll();
+        try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            Document document = new Document();
+            PdfWriter.getInstance(document, out);
+            document.open();
+            document.add(new Paragraph("Stock Report"));
+            for (Product p : products) {
+                document.add(new Paragraph(
+                        String.format("%s | %s | price: %s | stock: %d | threshold: %d",
+                                p.getName(), p.getCategory(),
+                                p.getPrice() != null ? p.getPrice().toPlainString() : "0",
+                                p.getStockQuantity(), p.getThreshold())));
+            }
+            document.close();
+            return out.toByteArray();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to create PDF", e);
+        }
+    }
+
+    public byte[] salesSummaryPdf(String period) {
+        Map<String, Object> summary = salesSummary(period);
+        Map<String, Long> totals = (Map<String, Long>) summary.getOrDefault("productTotals", Map.of());
+        try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            Document document = new Document();
+            PdfWriter.getInstance(document, out);
+            document.open();
+            document.add(new Paragraph("Sales Summary"));
+            for (Map.Entry<String, Long> entry : totals.entrySet()) {
+                document.add(new Paragraph(entry.getKey() + ": " + entry.getValue()));
+            }
+            document.close();
+            return out.toByteArray();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to create PDF", e);
+        }
     }
 }
 

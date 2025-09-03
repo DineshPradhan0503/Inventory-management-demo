@@ -3,6 +3,7 @@ package com.example.inventory.controller;
 import com.example.inventory.dto.ProductDtos.CreateOrUpdateProductRequest;
 import com.example.inventory.dto.ProductDtos.ProductResponse;
 import com.example.inventory.service.ProductService;
+import com.example.inventory.service.AuditService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
@@ -14,9 +15,11 @@ import org.springframework.web.bind.annotation.*;
 @CrossOrigin(origins = "*", allowedHeaders = "*")
 public class ProductController {
     private final ProductService productService;
+    private final AuditService auditService;
 
-    public ProductController(ProductService productService) {
+    public ProductController(ProductService productService, AuditService auditService) {
         this.productService = productService;
+        this.auditService = auditService;
     }
 
     @GetMapping
@@ -39,32 +42,41 @@ public class ProductController {
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<ProductResponse> create(@Valid @RequestBody CreateOrUpdateProductRequest req) {
-        return ResponseEntity.ok(productService.create(req));
+        ProductResponse res = productService.create(req);
+        auditService.log("PRODUCT_CREATE", res.getId());
+        return ResponseEntity.ok(res);
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<ProductResponse> update(@PathVariable String id, @Valid @RequestBody CreateOrUpdateProductRequest req) {
-        return ResponseEntity.ok(productService.update(id, req));
+        ProductResponse res = productService.update(id, req);
+        auditService.log("PRODUCT_UPDATE", id);
+        return ResponseEntity.ok(res);
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable String id) {
         productService.delete(id);
+        auditService.log("PRODUCT_DELETE", id);
         return ResponseEntity.noContent().build();
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/{id}/increase")
     public ResponseEntity<ProductResponse> increase(@PathVariable String id, @RequestParam int qty) {
-        return ResponseEntity.ok(productService.increaseStock(id, qty));
+        ProductResponse res = productService.increaseStock(id, qty);
+        auditService.log("STOCK_INCREASE", id + ":" + qty);
+        return ResponseEntity.ok(res);
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/{id}/decrease")
     public ResponseEntity<ProductResponse> decrease(@PathVariable String id, @RequestParam int qty) {
-        return ResponseEntity.ok(productService.decreaseStock(id, qty));
+        ProductResponse res = productService.decreaseStock(id, qty);
+        auditService.log("STOCK_DECREASE", id + ":" + qty);
+        return ResponseEntity.ok(res);
     }
 }
 

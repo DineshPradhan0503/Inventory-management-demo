@@ -42,6 +42,11 @@ const ReportsPage = () => {
             const rows = Object.entries(sales?.productTotals || {}).map(([k, v]) => ({ productId: k, total: v }))
             import('../../utils/export').then(m => m.exportToCsv('sales-summary.csv', rows))
           }}>Export Sales Summary CSV</Button>
+          <Box sx={{ flexGrow: 1 }} />
+          <Button variant="contained" onClick={() => window.open(`${import.meta.env.VITE_API_URL || 'http://localhost:8080/api'}/reports/stock.xlsx`, '_blank')}>Download Stock Excel</Button>
+          <Button variant="contained" onClick={() => window.open(`${import.meta.env.VITE_API_URL || 'http://localhost:8080/api'}/reports/sales.xlsx?period=weekly`, '_blank')}>Download Sales Excel</Button>
+          <Button variant="contained" onClick={() => window.open(`${import.meta.env.VITE_API_URL || 'http://localhost:8080/api'}/reports/stock.pdf`, '_blank')}>Download Stock PDF</Button>
+          <Button variant="contained" onClick={() => window.open(`${import.meta.env.VITE_API_URL || 'http://localhost:8080/api'}/reports/sales.pdf?period=weekly`, '_blank')}>Download Sales PDF</Button>
         </Stack>
         <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2 }}>
           <Paper sx={{ p: 2, height: 360 }}>

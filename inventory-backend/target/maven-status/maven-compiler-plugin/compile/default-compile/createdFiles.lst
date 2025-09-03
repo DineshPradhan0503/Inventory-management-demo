@@ -10,6 +10,7 @@ com/example/inventory/service/ProductService.class
 com/example/inventory/security/JwtService.class
 com/example/inventory/controller/AuthController.class
 com/example/inventory/model/Sale.class
+com/example/inventory/controller/AuditController.class
 com/example/inventory/dto/SaleDtos$RecordSaleRequest.class
 com/example/inventory/model/Product$ProductBuilder.class
 com/example/inventory/controller/ProductController.class
@@ -30,6 +31,7 @@ com/example/inventory/config/AppStartup.class
 com/example/inventory/config/GlobalExceptionHandler.class
 com/example/inventory/model/AuditLog$AuditLogBuilder.class
 com/example/inventory/repository/ProductRepository.class
+com/example/inventory/service/AuditService.class
 com/example/inventory/controller/SaleController.class
 com/example/inventory/dto/ProductDtos$CreateOrUpdateProductRequest.class
 com/example/inventory/dto/AuthDtos$LoginRequest.class

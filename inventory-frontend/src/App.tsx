@@ -8,6 +8,7 @@ import ProductsPage from './pages/products/ProductsPage'
 import SalesPage from './pages/sales/SalesPage'
 import ReportsPage from './pages/reports/ReportsPage'
 import ProtectedRoute from './components/ProtectedRoute'
+import AuditLogsPage from './pages/audit/AuditLogsPage'
 
 const theme = createTheme()
 
@@ -23,6 +24,7 @@ function App() {
           <Route path="/products" element={<ProductsPage />} />
           <Route path="/sales" element={<SalesPage />} />
           <Route path="/reports" element={<ReportsPage />} />
+          <Route path="/audit" element={<AuditLogsPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
