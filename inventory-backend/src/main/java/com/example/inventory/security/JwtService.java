@@ -70,9 +70,16 @@ public class JwtService {
     private Key getSignInKey() {
         byte[] keyBytes;
         try {
+            // Try Base64 first
             keyBytes = Decoders.BASE64.decode(jwtSecret);
-        } catch (IllegalArgumentException ex) {
-            keyBytes = jwtSecret.getBytes();
+        } catch (RuntimeException ex1) {
+            try {
+                // Try Base64Url as fallback
+                keyBytes = Decoders.BASE64URL.decode(jwtSecret);
+            } catch (RuntimeException ex2) {
+                // Use raw bytes as final fallback (supports plain secrets)
+                keyBytes = jwtSecret.getBytes();
+            }
         }
         return Keys.hmacShaKeyFor(keyBytes);
     }
