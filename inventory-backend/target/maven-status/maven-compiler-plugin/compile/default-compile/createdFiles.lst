@@ -26,6 +26,7 @@ com/example/inventory/security/JwtAuthFilter.class
 com/example/inventory/repository/UserRepository.class
 com/example/inventory/model/User$UserBuilder.class
 com/example/inventory/repository/AuditLogRepository.class
+com/example/inventory/config/PasswordConfig.class
 com/example/inventory/dto/ProductDtos$ProductResponse.class
 com/example/inventory/config/AppStartup.class
 com/example/inventory/config/GlobalExceptionHandler.class
