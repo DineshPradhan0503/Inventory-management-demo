@@ -1,0 +1,27 @@
+version: '3.9'
+services:
+  mongo:
+    image: mongodb/mongodb-community-server:7.0-ubi8
+    ports:
+      - '27017:27017'
+    volumes:
+      - mongo_data:/data/db
+  backend:
+    build: ./inventory-backend
+    environment:
+      - MONGODB_URI=mongodb://mongo:27017/inventorydb
+      - JWT_SECRET=change-me-please-32-bytes-min
+    ports:
+      - '8080:8080'
+    depends_on:
+      - mongo
+  frontend:
+    build: ./inventory-frontend
+    environment:
+      - VITE_API_URL=http://localhost:8080/api
+    ports:
+      - '5173:5173'
+    depends_on:
+      - backend
+volumes:
+  mongo_data:

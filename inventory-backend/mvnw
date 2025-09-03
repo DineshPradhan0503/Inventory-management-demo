@@ -1,0 +1,19 @@
+#!/bin/sh
+
+MVNW_REPOURL="https://repo.maven.apache.org/maven2"
+WRAPPER_JAR=".mvn/wrapper/maven-wrapper.jar"
+WRAPPER_URL="${MVNW_REPOURL}/io/takari/maven-wrapper/0.5.6/maven-wrapper-0.5.6.jar"
+
+if [ -z "$JAVA_HOME" ]; then
+  JAVA_CMD="java"
+else
+  JAVA_CMD="$JAVA_HOME/bin/java"
+fi
+
+if [ ! -f "$WRAPPER_JAR" ]; then
+  mkdir -p ".mvn/wrapper"
+  curl -fsSL -o "$WRAPPER_JAR" "$WRAPPER_URL"
+fi
+
+exec "$JAVA_CMD" -Dmaven.multiModuleProjectDirectory=$PWD -cp "$WRAPPER_JAR" io.takari.maven.wrapper.MavenWrapperMain "$@"
+
