@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import api from '../../utils/api'
-import { AppBar, Toolbar, Typography, Box, Button, Paper } from '@mui/material'
+import { AppBar, Toolbar, Typography, Box, Button, Paper, Stack } from '@mui/material'
 import { Link } from 'react-router-dom'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
 
@@ -33,6 +33,16 @@ const ReportsPage = () => {
         </Toolbar>
       </AppBar>
       <Box sx={{ p: 3 }}>
+        <Stack direction="row" spacing={2} sx={{ mb: 2 }}>
+          <Button variant="outlined" onClick={() => {
+            const rows = (stock?.lowStock || []).map((p: any) => ({ name: p.name, stock: p.stockQuantity, threshold: p.threshold }))
+            import('../../utils/export').then(m => m.exportToCsv('low-stock.csv', rows))
+          }}>Export Low Stock CSV</Button>
+          <Button variant="outlined" onClick={() => {
+            const rows = Object.entries(sales?.productTotals || {}).map(([k, v]) => ({ productId: k, total: v }))
+            import('../../utils/export').then(m => m.exportToCsv('sales-summary.csv', rows))
+          }}>Export Sales Summary CSV</Button>
+        </Stack>
         <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2 }}>
           <Paper sx={{ p: 2, height: 360 }}>
             <Typography variant="h6">Low Stock Overview</Typography>
